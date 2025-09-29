@@ -1,1 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPS Realista 3D - Three.js</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.138.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.138.2/examples/js/controls/PointerLockControls.js"></script>
+
+  <script>
+    // Cena, câmera e renderizador
+    const cena = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderizador = new THREE.WebGLRenderer();
+    renderizador.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderizador.domElement);
+
+    // Controle de movimento do jogador
+    const controls = new THREE.PointerLockControls(camera, renderizador.domElement);
+
+    // Configuração da cena e luz
+    const luz = new THREE.AmbientLight(0x404040, 1.5); // Luz ambiente suave
+    cena.add(luz);
+
+    // Luz direcional (simula luz do sol)
+    const luzDirecional = new THREE.DirectionalLight(0xffffff, 1);
+    luzDirecional.position.set(10, 10, 10);
+    cena.add(luzDirecional);
+
+    // Chão com textura
+    const texturaChao = new THREE.TextureLoader().load('https://www.w3schools.com/w3images/rocks.jpg');
+    const geometriaChao = new THREE.PlaneGeometry(1000, 1000);
+    const materialChao = new THREE.MeshLambertMaterial({ map: texturaChao });
+    const chao = new THREE.Mesh(geometriaChao, materialChao);
+    chao.rotation.x = Math.PI / 2;
+    cena.add(chao);
+
+    // Adicionando um cubo como objeto interativo
+    const texturaCubo = new THREE.TextureLoader().load('https://www.w3schools.com/w3images/cube.jpg');
+    const geometriaCubo = new THREE.BoxGeometry(10, 10, 10);
+    const materialCubo = new THREE.MeshLambertMaterial({ map: texturaCubo });
+    const cubo = new THREE.Mesh(geometriaCubo, materialCubo);
+    cubo.position.set(20, 5, -50);
+    cena.add(cubo);
+
+    // Inimigo (um cubo simples)
+    const geometriaInimigo = new THREE.BoxGeometry(10, 10, 10);
+    const materialInimigo = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const inimigo = new THREE.Mesh(geometriaInimigo, materialInimigo);
+    inimigo.position.set(-20, 5, -100);
+    cena.add(inimigo);
+
+    // Sons do jogo
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    const somPassos = new THREE.Audio(listener);
+    const bufferPassos = new THREE.AudioLoader().load('https://www.soundjay.com/button/beep-07.wav');
+    somPassos.setBuffer(bufferPassos);
+    somPassos.setLoop(true);
+    somPassos.setVolume(0.5);
+
+    const somTiro = new THREE.Audio(listener);
+    const bufferTiro = new THREE.AudioLoader().load('https://www.soundjay.com/button/beep-09.wav');
+    somTiro.setBuffer(bufferTiro);
+    somTiro.setVolume(0.5);
+
+    // Movimentos do jogador
+    let velocidade = 0.1;
+    let direcao = new THREE.Vector3();
+
+    // Munição e tiro
+    let tiros = [];
+    let munição = 10;
+
+    // Função para disparar
+    function dispararTiro(event) {
+      if (munição <= 0) return;
+
+      munição--;
+
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+
+      const angulo = Math.atan2(mouseY - (camera.position.y), mouseX - (camera.position.x));
+
+      const novoTiro = {
+        x: camera.position.x,
+        y: camera.position.y,
+        z: camera.position.z,
+        dx: Math.cos(angulo) * 10,
+        dy: Math.sin(angulo) * 10,
+        largura: 1,
+        altura: 1,
+      };
+
+      tiros.push(novoTiro);
+      somTiro.play();
+    }
+
+    // Função para mover os tiros
+    function moverTiros() {
+      for (let i = 0; i < tiros.length; i++) {
+        tiros[i].x += tiros[i].dx;
+        tiros[i].y += tiros[i].dy;
+
+        // Remover tiros que saem da tela
+        if (tiros[i].x < -1000 || tiros[i].x > 1000 || tiros[i].y < -1000 || tiros[i].y > 1000) {
+          tiros.splice(i, 1);
+          i--;
+        }
+      }
+    }
+
+    // Função de movimento
+    function controleTeclado() {
+      if (keys['w']) {
+        direcao.z = -velocidade;
+      } else if (keys['s']) {
+        direcao.z = velocidade;
+      } else {
+        direcao.z = 0;
+      }
+
+      if (keys['a']) {
+        direcao.x = -velocidade;
+      } else if (keys['d']) {
+        direcao.x = velocidade;
+      } else {
+        direcao.x = 0;
+      }
+    }
+
+    // Atualizar a cena
+    function atualizar() {
+      controls.update();
+      moverTiros();
+      controleTeclado();
+      camera.position.add(direcao);
+
+      // Atualizar a posição do inimigo (simples movimento)
+      inimigo.position.x += 0.05;
+      if (inimigo.position.x > 50 || inimigo.position.x < -50) {
+        inimigo.position.x *= -1;
+      }
+
+      // Verificação de colisão entre tiros e inimigos
+      for (let i = 0; i < tiros.length; i++) {
+        if (new THREE.Box3().setFromObject(inimigo).intersectsBox(new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(tiros[i].x, tiros[i].y, 0), new THREE.Vector3(1, 1, 1)))) {
+          tiros.splice(i, 1);
+          inimigo.material.color.set(0x00ff00); // Mudar cor do inimigo para verde quando atingido
+          break;
+        }
+      }
+
+      // Renderizar a cena
+      renderizador.render(cena, camera);
+      requestAnimationFrame(atualizar);
+    }
+
+    // Controle de teclas
+    const keys = {};
+    window.addEventListener('keydown', (event) => { keys[event.key] = true; });
+    window.addEventListener('keyup', (event) => { keys[event.key] = false; });
+
+    // Ativando o Pointer Lock
+    document.body.addEventListener('click', () => {
+      controls.lock();
+    });
+
+    // Redimensionar a tela
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderizador.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Adicionar a função de disparo
+    window.addEventListener('click', dispararTiro);
+
+    // Iniciar o jogo
+    atualizar();
+  </script>
+</body>
+</html>
 
