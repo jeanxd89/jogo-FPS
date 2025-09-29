@@ -1,104 +1,179 @@
-  <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FPS Realista 3D - Movimentação FPS</title>
+  <title>Quiz Interativo - Jogo de Conhecimentos</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      color: #555;
+    }
+
+    .button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .button:hover {
+      background: #45a049;
+    }
+
+    .answer-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background: #f0f0f0;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .answer-btn:hover {
+      background: #ddd;
+      transform: scale(1.05);
+    }
+
+    .answer-btn:active {
+      transform: scale(0.98);
+    }
+
+    .feedback {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #555;
+      display: none;
+    }
+
+    .correct {
+      color: green;
+    }
+
+    .incorrect {
+      color: red;
+    }
   </style>
 </head>
 <body>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.138.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.138.2/examples/js/controls/PointerLockControls.js"></script>
+
+  <div class="container">
+    <h1>Quiz Interativo</h1>
+    <div class="question" id="question"></div>
+    <button class="answer-btn" onclick="checkAnswer(0)" id="answer0"></button>
+    <button class="answer-btn" onclick="checkAnswer(1)" id="answer1"></button>
+    <button class="answer-btn" onclick="checkAnswer(2)" id="answer2"></button>
+    <button class="answer-btn" onclick="checkAnswer(3)" id="answer3"></button>
+
+    <div class="feedback" id="feedback"></div>
+
+    <br>
+    <button class="button" id="nextButton" style="display: none;" onclick="nextQuestion()">Próxima Pergunta</button>
+  </div>
 
   <script>
-    // Cena, câmera e renderizador
-    const cena = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderizador = new THREE.WebGLRenderer();
-    renderizador.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderizador.domElement);
+    const questions = [
+      {
+        question: "Qual a capital do Brasil?",
+        answers: ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"],
+        correctAnswer: 2
+      },
+      {
+        question: "Quem é o criador do Facebook?",
+        answers: ["Bill Gates", "Steve Jobs", "Mark Zuckerberg", "Elon Musk"],
+        correctAnswer: 2
+      },
+      {
+        question: "Qual é o maior planeta do sistema solar?",
+        answers: ["Terra", "Júpiter", "Saturno", "Marte"],
+        correctAnswer: 1
+      },
+      {
+        question: "Qual é a língua oficial do Japão?",
+        answers: ["Coreano", "Chinês", "Japonês", "Inglês"],
+        correctAnswer: 2
+      }
+    ];
 
-    // Controle de movimento do jogador
-    const controls = new THREE.PointerLockControls(camera, renderizador.domElement);
+    let currentQuestion = 0;
 
-    // Luz básica
-    const luz = new THREE.AmbientLight(0x404040, 1.5); // Luz suave
-    cena.add(luz);
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      document.getElementById("question").textContent = q.question;
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`answer${i}`).textContent = q.answers[i];
+      }
+      document.getElementById("feedback").style.display = "none";
+      document.getElementById("nextButton").style.display = "none";
+    }
 
-    // Luz direcional (simula luz do sol)
-    const luzDirecional = new THREE.DirectionalLight(0xffffff, 1);
-    luzDirecional.position.set(10, 10, 10);
-    cena.add(luzDirecional);
+    function checkAnswer(answerIndex) {
+      const q = questions[currentQuestion];
+      const feedback = document.getElementById("feedback");
+      const nextButton = document.getElementById("nextButton");
 
-    // Criar um cubo para visualizar a cena
-    const geometriaCubo = new THREE.BoxGeometry(10, 10, 10);
-    const materialCubo = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const cubo = new THREE.Mesh(geometriaCubo, materialCubo);
-    cubo.position.set(20, 5, -50);
-    cena.add(cubo);
-
-    // Adicionar um plano de chão
-    const geometriaChao = new THREE.PlaneGeometry(1000, 1000);
-    const materialChao = new THREE.MeshBasicMaterial({ color: 0x228B22, side: THREE.DoubleSide });
-    const chao = new THREE.Mesh(geometriaChao, materialChao);
-    chao.rotation.x = Math.PI / 2;
-    cena.add(chao);
-
-    // Variáveis para movimento
-    const velocidade = 0.1;
-    let direcao = new THREE.Vector3();
-
-    // Função de movimentação do jogador
-    function controleTeclado() {
-      if (keys['w']) {
-        direcao.z = -velocidade;
-      } else if (keys['s']) {
-        direcao.z = velocidade;
+      if (answerIndex === q.correctAnswer) {
+        feedback.textContent = "Resposta Correta!";
+        feedback.className = "feedback correct";
       } else {
-        direcao.z = 0;
+        feedback.textContent = "Resposta Errada!";
+        feedback.className = "feedback incorrect";
       }
 
-      if (keys['a']) {
-        direcao.x = -velocidade;
-      } else if (keys['d']) {
-        direcao.x = velocidade;
+      feedback.style.display = "block";
+      nextButton.style.display = "inline-block";
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        loadQuestion();
       } else {
-        direcao.x = 0;
+        document.getElementById("question").textContent = "Você completou o quiz!";
+        document.getElementById("nextButton").style.display = "none";
+        document.getElementById("feedback").style.display = "none";
       }
     }
 
-    // Função de animação
-    function atualizar() {
-      controls.update(); // Atualiza os controles do mouse
-      controleTeclado(); // Verifica a movimentação do jogador
-      camera.position.add(direcao); // Atualiza a posição da câmera
-      renderizador.render(cena, camera); // Renderiza a cena
-
-      requestAnimationFrame(atualizar); // Chama a função de animação
-    }
-
-    // Controle de teclas
-    const keys = {};
-    window.addEventListener('keydown', (event) => { keys[event.key] = true; });
-    window.addEventListener('keyup', (event) => { keys[event.key] = false; });
-
-    // Ativar o Pointer Lock para capturar o mouse
-    document.body.addEventListener('click', () => {
-      controls.lock();
-    });
-
-    // Redimensionar a tela
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderizador.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Iniciar o loop de animação
-    atualizar();
+    // Inicia o quiz ao carregar a página
+    loadQuestion();
   </script>
+
 </body>
 </html>
+
