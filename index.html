@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
@@ -33,92 +33,25 @@
     luzDirecional.position.set(10, 10, 10);
     cena.add(luzDirecional);
 
-    // Chão com textura
-    const texturaChao = new THREE.TextureLoader().load('https://www.w3schools.com/w3images/rocks.jpg');
+    // Chão simples (sem textura por enquanto)
     const geometriaChao = new THREE.PlaneGeometry(1000, 1000);
-    const materialChao = new THREE.MeshLambertMaterial({ map: texturaChao });
+    const materialChao = new THREE.MeshBasicMaterial({ color: 0x228B22, side: THREE.DoubleSide });
     const chao = new THREE.Mesh(geometriaChao, materialChao);
     chao.rotation.x = Math.PI / 2;
     cena.add(chao);
 
-    // Adicionando um cubo como objeto interativo
-    const texturaCubo = new THREE.TextureLoader().load('https://www.w3schools.com/w3images/cube.jpg');
+    // Adicionando um cubo simples como objeto
     const geometriaCubo = new THREE.BoxGeometry(10, 10, 10);
-    const materialCubo = new THREE.MeshLambertMaterial({ map: texturaCubo });
+    const materialCubo = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     const cubo = new THREE.Mesh(geometriaCubo, materialCubo);
     cubo.position.set(20, 5, -50);
     cena.add(cubo);
-
-    // Inimigo (um cubo simples)
-    const geometriaInimigo = new THREE.BoxGeometry(10, 10, 10);
-    const materialInimigo = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const inimigo = new THREE.Mesh(geometriaInimigo, materialInimigo);
-    inimigo.position.set(-20, 5, -100);
-    cena.add(inimigo);
-
-    // Sons do jogo
-    const listener = new THREE.AudioListener();
-    camera.add(listener);
-
-    const somPassos = new THREE.Audio(listener);
-    const bufferPassos = new THREE.AudioLoader().load('https://www.soundjay.com/button/beep-07.wav');
-    somPassos.setBuffer(bufferPassos);
-    somPassos.setLoop(true);
-    somPassos.setVolume(0.5);
-
-    const somTiro = new THREE.Audio(listener);
-    const bufferTiro = new THREE.AudioLoader().load('https://www.soundjay.com/button/beep-09.wav');
-    somTiro.setBuffer(bufferTiro);
-    somTiro.setVolume(0.5);
 
     // Movimentos do jogador
     let velocidade = 0.1;
     let direcao = new THREE.Vector3();
 
-    // Munição e tiro
-    let tiros = [];
-    let munição = 10;
-
-    // Função para disparar
-    function dispararTiro(event) {
-      if (munição <= 0) return;
-
-      munição--;
-
-      const mouseX = event.clientX;
-      const mouseY = event.clientY;
-
-      const angulo = Math.atan2(mouseY - (camera.position.y), mouseX - (camera.position.x));
-
-      const novoTiro = {
-        x: camera.position.x,
-        y: camera.position.y,
-        z: camera.position.z,
-        dx: Math.cos(angulo) * 10,
-        dy: Math.sin(angulo) * 10,
-        largura: 1,
-        altura: 1,
-      };
-
-      tiros.push(novoTiro);
-      somTiro.play();
-    }
-
-    // Função para mover os tiros
-    function moverTiros() {
-      for (let i = 0; i < tiros.length; i++) {
-        tiros[i].x += tiros[i].dx;
-        tiros[i].y += tiros[i].dy;
-
-        // Remover tiros que saem da tela
-        if (tiros[i].x < -1000 || tiros[i].x > 1000 || tiros[i].y < -1000 || tiros[i].y > 1000) {
-          tiros.splice(i, 1);
-          i--;
-        }
-      }
-    }
-
-    // Função de movimento
+    // Função de movimentação do jogador
     function controleTeclado() {
       if (keys['w']) {
         direcao.z = -velocidade;
@@ -137,31 +70,14 @@
       }
     }
 
-    // Atualizar a cena
+    // Função para atualizar a cena
     function atualizar() {
-      controls.update();
-      moverTiros();
+      controls.update(); // Atualizar controles de movimento
       controleTeclado();
-      camera.position.add(direcao);
+      camera.position.add(direcao); // Mover a câmera
+      renderizador.render(cena, camera); // Renderizar a cena
 
-      // Atualizar a posição do inimigo (simples movimento)
-      inimigo.position.x += 0.05;
-      if (inimigo.position.x > 50 || inimigo.position.x < -50) {
-        inimigo.position.x *= -1;
-      }
-
-      // Verificação de colisão entre tiros e inimigos
-      for (let i = 0; i < tiros.length; i++) {
-        if (new THREE.Box3().setFromObject(inimigo).intersectsBox(new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(tiros[i].x, tiros[i].y, 0), new THREE.Vector3(1, 1, 1)))) {
-          tiros.splice(i, 1);
-          inimigo.material.color.set(0x00ff00); // Mudar cor do inimigo para verde quando atingido
-          break;
-        }
-      }
-
-      // Renderizar a cena
-      renderizador.render(cena, camera);
-      requestAnimationFrame(atualizar);
+      requestAnimationFrame(atualizar); // Atualizar a cena em loop
     }
 
     // Controle de teclas
@@ -169,24 +85,22 @@
     window.addEventListener('keydown', (event) => { keys[event.key] = true; });
     window.addEventListener('keyup', (event) => { keys[event.key] = false; });
 
-    // Ativando o Pointer Lock
+    // Ativando o Pointer Lock (captura do mouse)
     document.body.addEventListener('click', () => {
       controls.lock();
     });
 
-    // Redimensionar a tela
+    // Redimensionamento da tela
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderizador.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Adicionar a função de disparo
-    window.addEventListener('click', dispararTiro);
-
     // Iniciar o jogo
     atualizar();
   </script>
 </body>
 </html>
+
 
