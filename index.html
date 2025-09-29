@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FPS Realista 3D - Teste Básico</title>
+  <title>FPS Realista 3D - Movimentação FPS</title>
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
@@ -21,29 +21,87 @@
     renderizador.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderizador.domElement);
 
+    // Controle de movimento do jogador
+    const controls = new THREE.PointerLockControls(camera, renderizador.domElement);
+
     // Luz básica
-    const luz = new THREE.AmbientLight(0x404040, 1.5);
+    const luz = new THREE.AmbientLight(0x404040, 1.5); // Luz suave
     cena.add(luz);
+
+    // Luz direcional (simula luz do sol)
+    const luzDirecional = new THREE.DirectionalLight(0xffffff, 1);
+    luzDirecional.position.set(10, 10, 10);
+    cena.add(luzDirecional);
 
     // Criar um cubo para visualizar a cena
     const geometriaCubo = new THREE.BoxGeometry(10, 10, 10);
     const materialCubo = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     const cubo = new THREE.Mesh(geometriaCubo, materialCubo);
+    cubo.position.set(20, 5, -50);
     cena.add(cubo);
 
-    // Posicionar a câmera para ver o cubo
-    camera.position.z = 50;
+    // Adicionar um plano de chão
+    const geometriaChao = new THREE.PlaneGeometry(1000, 1000);
+    const materialChao = new THREE.MeshBasicMaterial({ color: 0x228B22, side: THREE.DoubleSide });
+    const chao = new THREE.Mesh(geometriaChao, materialChao);
+    chao.rotation.x = Math.PI / 2;
+    cena.add(chao);
+
+    // Variáveis para movimento
+    const velocidade = 0.1;
+    let direcao = new THREE.Vector3();
+
+    // Controle de movimentação do jogador
+    function controleTeclado() {
+      if (keys['w']) {
+        direcao.z = -velocidade;
+      } else if (keys['s']) {
+        direcao.z = velocidade;
+      } else {
+        direcao.z = 0;
+      }
+
+      if (keys['a']) {
+        direcao.x = -velocidade;
+      } else if (keys['d']) {
+        direcao.x = velocidade;
+      } else {
+        direcao.x = 0;
+      }
+    }
 
     // Função de animação
     function atualizar() {
-      requestAnimationFrame(atualizar);
-      renderizador.render(cena, camera);
+      controls.update(); // Atualiza os controles do mouse
+      controleTeclado(); // Verifica a movimentação do jogador
+      camera.position.add(direcao); // Atualiza a posição da câmera
+      renderizador.render(cena, camera); // Renderiza a cena
+
+      requestAnimationFrame(atualizar); // Chama a função de animação
     }
+
+    // Controle de teclas
+    const keys = {};
+    window.addEventListener('keydown', (event) => { keys[event.key] = true; });
+    window.addEventListener('keyup', (event) => { keys[event.key] = false; });
+
+    // Ativar o Pointer Lock para capturar o mouse
+    document.body.addEventListener('click', () => {
+      controls.lock();
+    });
+
+    // Redimensionar a tela
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderizador.setSize(window.innerWidth, window.innerHeight);
+    });
 
     // Iniciar o loop de animação
     atualizar();
   </script>
 </body>
 </html>
+
 
 
