@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef Master Pro - Jogo de Culinária Realista</title>
+    <title>Chef Master Pro - Jogo de Culinária</title>
     <style>
         * {
             margin: 0;
@@ -236,7 +236,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: grab;
+            cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             font-size: 1.8rem;
@@ -520,6 +520,10 @@
             font-size: 0.8rem;
         }
 
+        .selected {
+            box-shadow: 0 0 0 3px var(--accent) !important;
+        }
+
         @media (max-width: 1024px) {
             .game-area {
                 grid-template-columns: 1fr;
@@ -547,7 +551,7 @@
                         <div class="stove">
                             <div class="burners">
                                 <div class="burner">
-                                    <div class="cooking-item pan" id="pan" data-tool="pan">🍳</div>
+                                    <div class="cooking-item pan selected" id="pan" data-tool="pan">🍳</div>
                                 </div>
                                 <div class="burner">
                                     <div class="cooking-item pot" id="pot" data-tool="pot">🍲</div>
@@ -636,11 +640,11 @@
                 </div>
                 
                 <div class="actions">
-                    <button id="chop-btn" disabled>🔪 Cortar</button>
-                    <button id="cook-btn" disabled>🍳 Cozinhar</button>
-                    <button id="bake-btn" disabled>🔥 Assar</button>
-                    <button id="mix-btn" disabled>🥣 Misturar</button>
-                    <button id="serve-btn" disabled>🍽️ Servir</button>
+                    <button id="chop-btn">🔪 Cortar</button>
+                    <button id="cook-btn">🍳 Cozinhar</button>
+                    <button id="bake-btn">🔥 Assar</button>
+                    <button id="mix-btn">🥣 Misturar</button>
+                    <button id="serve-btn">🍽️ Servir</button>
                     <button id="clear-btn">🗑️ Limpar</button>
                 </div>
             </div>
@@ -750,7 +754,7 @@
         let xpToNextLevel = 100;
         
         // Estado das estações de trabalho
-        let currentStation = null;
+        let currentStation = 'pan';
         let currentIngredients = {
             pan: [],
             pot: [],
@@ -761,7 +765,7 @@
         
         let cookingTimers = {};
         let currentOrder = null;
-        let orderTimeLeft = 0;
+        let orderTimeLeft = 120;
         let orderTimerInterval = null;
 
         // Receitas avançadas
@@ -802,13 +806,6 @@
                 tools: ["cuttingBoard", "pot", "pan"]
             },
             { 
-                name: "Risoto de Cogumelos", 
-                ingredients: ["rice", "mushroom", "onion", "garlic", "cheese"], 
-                points: 60,
-                price: 32,
-                tools: ["cuttingBoard", "pot"]
-            },
-            { 
                 name: "Pizza Margherita", 
                 ingredients: ["bread", "tomato", "cheese", "basil"], 
                 points: 48,
@@ -830,15 +827,11 @@
             generateRecipeList();
             createNewOrder();
             
-            // Adicionar eventos de arrastar e soltar
+            // Adicionar eventos de clique aos ingredientes
             document.querySelectorAll('.ingredient').forEach(ingredient => {
-                ingredient.addEventListener('dragstart', handleDragStart);
-            });
-            
-            // Adicionar eventos de soltar
-            document.querySelectorAll('.station, .cooking-item, #prep-area').forEach(area => {
-                area.addEventListener('dragover', handleDragOver);
-                area.addEventListener('drop', handleDrop);
+                ingredient.addEventListener('click', () => {
+                    addIngredientToStation(ingredient.getAttribute('data-ingredient'));
+                });
             });
             
             // Adicionar eventos aos botões
@@ -860,61 +853,27 @@
                 });
             });
             
-            // Selecionar a panela por padrão
-            selectStation(pan);
-        }
-
-        // Manipulação de arrastar e soltar
-        function handleDragStart(e) {
-            e.dataTransfer.setData('text/plain', e.target.getAttribute('data-ingredient'));
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            const ingredientType = e.dataTransfer.getData('text/plain');
-            addIngredientToStation(ingredientType, e.target);
+            // Iniciar timer do pedido
+            startOrderTimer();
         }
 
         // Adicionar ingrediente a uma estação
-        function addIngredientToStation(ingredientType, stationElement) {
-            // Determinar em qual estação o ingrediente foi solto
-            let station = null;
-            let stationId = null;
-            
-            if (stationElement.classList.contains('pan') || stationElement.id === 'pan') {
-                station = pan;
-                stationId = 'pan';
-            } else if (stationElement.classList.contains('pot') || stationElement.id === 'pot') {
-                station = pot;
-                stationId = 'pot';
-            } else if (stationElement.classList.contains('cutting-board') || stationElement.id === 'cutting-board') {
-                station = cuttingBoard;
-                stationId = 'cuttingBoard';
-            } else if (stationElement.classList.contains('oven') || stationElement.id === 'oven') {
-                station = bakingTray;
-                stationId = 'oven';
-            } else if (stationElement.id === 'prep-area') {
-                station = prepArea;
-                stationId = 'prepArea';
-            }
-            
-            if (station && currentIngredients[stationId].length < 5) {
-                currentIngredients[stationId].push(ingredientType);
+        function addIngredientToStation(ingredientType) {
+            if (currentIngredients[currentStation].length < 5) {
+                currentIngredients[currentStation].push(ingredientType);
                 
                 // Adicionar visualmente à estação
+                const stationElement = getStationElement(currentStation);
                 const ingredientElement = document.createElement('div');
                 ingredientElement.className = `ingredient-on-board ${ingredientType}`;
                 ingredientElement.textContent = getIngredientEmoji(ingredientType);
                 ingredientElement.setAttribute('data-ingredient', ingredientType);
                 
                 // Posicionar aleatoriamente na estação
-                const stationRect = station.getBoundingClientRect();
-                const maxX = stationRect.width - 60;
-                const maxY = stationRect.height - 60;
+                const stationRect = stationElement.getBoundingClientRect();
+                const containerRect = stationElement.getBoundingClientRect();
+                const maxX = containerRect.width - 60;
+                const maxY = containerRect.height - 60;
                 
                 const randomX = Math.floor(Math.random() * maxX);
                 const randomY = Math.floor(Math.random() * maxY);
@@ -922,12 +881,37 @@
                 ingredientElement.style.left = `${randomX}px`;
                 ingredientElement.style.top = `${randomY}px`;
                 
-                station.appendChild(ingredientElement);
+                stationElement.appendChild(ingredientElement);
                 
                 // Atualizar botões com base na estação selecionada
                 updateActionButtons();
+                showMessage("Ingrediente Adicionado", `Você adicionou ${getIngredientName(ingredientType)} à ${getStationName(currentStation)}`);
             } else {
-                showMessage("Atenção", "Esta estação está cheia ou não é válida!");
+                showMessage("Estação Cheia", `A ${getStationName(currentStation)} está cheia! Limpe antes de adicionar mais ingredientes.`);
+            }
+        }
+
+        // Obter elemento da estação
+        function getStationElement(stationId) {
+            switch(stationId) {
+                case 'pan': return pan;
+                case 'pot': return pot;
+                case 'cuttingBoard': return cuttingBoard;
+                case 'oven': return bakingTray;
+                case 'prepArea': return prepArea;
+                default: return pan;
+            }
+        }
+
+        // Obter nome da estação
+        function getStationName(stationId) {
+            switch(stationId) {
+                case 'pan': return 'Frigideira';
+                case 'pot': return 'Panela';
+                case 'cuttingBoard': return 'Tábua de Corte';
+                case 'oven': return 'Forno';
+                case 'prepArea': return 'Área de Preparação';
+                default: return 'Estação';
             }
         }
 
@@ -935,17 +919,19 @@
         function selectStation(stationElement) {
             // Remover seleção anterior
             document.querySelectorAll('.cooking-item').forEach(item => {
-                item.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+                item.classList.remove('selected');
             });
             
             // Adicionar seleção à nova estação
-            stationElement.style.boxShadow = '0 0 0 3px var(--accent)';
+            stationElement.classList.add('selected');
             
             // Atualizar estação atual
             currentStation = stationElement.getAttribute('data-tool');
             
             // Atualizar botões de ação
             updateActionButtons();
+            
+            showMessage("Estação Selecionada", `Agora você está usando a ${getStationName(currentStation)}`);
         }
 
         // Atualizar botões de ação com base na estação selecionada
@@ -956,8 +942,6 @@
             bakeBtn.disabled = true;
             mixBtn.disabled = true;
             serveBtn.disabled = true;
-            
-            if (!currentStation) return;
             
             // Habilitar botões com base na estação selecionada e nos ingredientes
             const ingredients = currentIngredients[currentStation];
@@ -989,6 +973,7 @@
             if (currentStation !== 'cuttingBoard' || currentIngredients.cuttingBoard.length === 0) return;
             
             showMessage("Preparação", "Cortando ingredientes...");
+            chopBtn.disabled = true;
             
             // Simular tempo de corte
             setTimeout(() => {
@@ -1001,7 +986,7 @@
                 });
                 
                 showMessage("Sucesso", "Ingredientes cortados com sucesso!");
-                updateActionButtons();
+                chopBtn.disabled = false;
             }, 2000);
         }
 
@@ -1013,10 +998,11 @@
             cookBtn.disabled = true;
             
             // Adicionar timer visual
+            const stationElement = getStationElement(currentStation);
             const timer = document.createElement('div');
             timer.className = 'cooking-timer';
             timer.textContent = '30s';
-            document.querySelector(`#${currentStation}`).appendChild(timer);
+            stationElement.appendChild(timer);
             
             let timeLeft = 30;
             cookingTimers[currentStation] = setInterval(() => {
@@ -1028,7 +1014,6 @@
                     timer.remove();
                     
                     // Marcar ingredientes como cozidos
-                    const stationElement = document.querySelector(`#${currentStation}`);
                     const ingredients = stationElement.querySelectorAll('.ingredient-on-board');
                     ingredients.forEach(ingredient => {
                         ingredient.style.transform = 'scale(1.1)';
@@ -1052,4 +1037,306 @@
             bakingTray.style.display = 'flex';
             
             // Adicionar timer visual
-            const timer = document
+            const timer = document.createElement('div');
+            timer.className = 'cooking-timer';
+            timer.textContent = '45s';
+            bakingTray.appendChild(timer);
+            
+            let timeLeft = 45;
+            cookingTimers.oven = setInterval(() => {
+                timeLeft--;
+                timer.textContent = `${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(cookingTimers.oven);
+                    timer.remove();
+                    
+                    // Marcar ingredientes como assados
+                    const ingredients = bakingTray.querySelectorAll('.ingredient-on-board');
+                    ingredients.forEach(ingredient => {
+                        ingredient.style.transform = 'scale(1.1)';
+                        ingredient.style.filter = 'brightness(1.3)';
+                        ingredient.style.background = 'linear-gradient(to bottom, #d2691e, #8b4513)';
+                    });
+                    
+                    showMessage("Sucesso", "Ingredientes assados perfeitamente!");
+                    bakeBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        // Misturar ingredientes
+        function mixIngredients() {
+            if (currentStation !== 'prepArea' || currentIngredients.prepArea.length === 0) return;
+            
+            showMessage("Misturando", "Combinando ingredientes...");
+            mixBtn.disabled = true;
+            
+            // Simular tempo de mistura
+            setTimeout(() => {
+                // Criar uma mistura visual
+                const prepAreaElement = prepArea;
+                prepAreaElement.innerHTML = '';
+                
+                const mixedElement = document.createElement('div');
+                mixedElement.style.textAlign = 'center';
+                mixedElement.style.fontSize = '3rem';
+                mixedElement.textContent = '🥣';
+                mixedElement.style.animation = 'pulse 1s infinite';
+                
+                prepAreaElement.appendChild(mixedElement);
+                
+                showMessage("Sucesso", "Ingredientes misturados com sucesso!");
+                mixBtn.disabled = false;
+            }, 2000);
+        }
+
+        // Servir prato
+        function serveDish() {
+            // Coletar todos os ingredientes de todas as estações
+            const allIngredients = [];
+            Object.values(currentIngredients).forEach(ingredients => {
+                allIngredients.push(...ingredients);
+            });
+            
+            if (allIngredients.length === 0) {
+                showMessage("Atenção", "Não há ingredientes para servir!");
+                return;
+            }
+            
+            // Verificar se corresponde a algum pedido
+            checkOrderCompletion(allIngredients);
+            
+            // Limpar todas as estações
+            clearAllStations();
+            
+            // Atualizar estatísticas
+            dishesServed++;
+            updateStats();
+        }
+
+        // Verificar conclusão do pedido
+        function checkOrderCompletion(ingredients) {
+            if (!currentOrder) return;
+            
+            // Ordenar ingredientes para comparação
+            const sortedIngredients = [...ingredients].sort();
+            const sortedOrder = [...currentOrder.ingredients].sort();
+            
+            // Verificar se os ingredientes correspondem ao pedido
+            if (JSON.stringify(sortedIngredients) === JSON.stringify(sortedOrder)) {
+                // Pedido completo!
+                score += currentOrder.points;
+                money += currentOrder.price;
+                xp += 20;
+                
+                showMessage("Pedido Entregue!", `Você completou o pedido e ganhou ${currentOrder.points} pontos e $${currentOrder.price}!`);
+                
+                // Verificar se subiu de nível
+                if (xp >= xpToNextLevel) {
+                    levelUp();
+                }
+                
+                // Criar novo pedido
+                createNewOrder();
+            } else {
+                showMessage("Pedido Incorreto", "Os ingredientes não correspondem ao pedido do cliente.");
+            }
+        }
+
+        // Subir de nível
+        function levelUp() {
+            level++;
+            xp = 0;
+            xpToNextLevel = Math.floor(xpToNextLevel * 1.5);
+            
+            showMessage("Parabéns!", `Você subiu para o nível ${level}! Novas receitas estão disponíveis.`);
+            updateStats();
+        }
+
+        // Limpar estação atual
+        function clearStation() {
+            currentIngredients[currentStation] = [];
+            const stationElement = getStationElement(currentStation);
+            stationElement.innerHTML = '';
+            
+            // Se for o forno, esconder a bandeja
+            if (currentStation === 'oven') {
+                bakingTray.style.display = 'none';
+            }
+            
+            // Se for a área de preparação, restaurar o texto padrão
+            if (currentStation === 'prepArea') {
+                const defaultText = document.createElement('div');
+                defaultText.style.textAlign = 'center';
+                defaultText.style.padding = '20px';
+                defaultText.style.color = '#7f8c8d';
+                defaultText.textContent = 'Arraste ingredientes aqui para misturar';
+                stationElement.appendChild(defaultText);
+            }
+            
+            updateActionButtons();
+            showMessage("Estação Limpa", `A ${getStationName(currentStation)} foi limpa.`);
+        }
+
+        // Limpar todas as estações
+        function clearAllStations() {
+            Object.keys(currentIngredients).forEach(station => {
+                currentIngredients[station] = [];
+                const stationElement = getStationElement(station);
+                if (stationElement) {
+                    stationElement.innerHTML = '';
+                }
+            });
+            
+            // Restaurar áreas especiais
+            bakingTray.style.display = 'none';
+            
+            const defaultText = document.createElement('div');
+            defaultText.style.textAlign = 'center';
+            defaultText.style.padding = '20px';
+            defaultText.style.color = '#7f8c8d';
+            defaultText.textContent = 'Arraste ingredientes aqui para misturar';
+            prepArea.appendChild(defaultText);
+            
+            updateActionButtons();
+        }
+
+        // Criar novo pedido
+        function createNewOrder() {
+            // Selecionar uma receita aleatória
+            const randomIndex = Math.floor(Math.random() * recipes.length);
+            currentOrder = recipes[randomIndex];
+            
+            // Atualizar visual do pedido
+            orderContent.innerHTML = '';
+            currentOrder.ingredients.forEach(ingredient => {
+                const ingredientElement = document.createElement('div');
+                ingredientElement.className = `order-ingredient ${ingredient}`;
+                ingredientElement.textContent = getIngredientEmoji(ingredient);
+                orderContent.appendChild(ingredientElement);
+            });
+            
+            // Reiniciar timer
+            orderTimeLeft = 120;
+            updateOrderTimer();
+            
+            showMessage("Novo Pedido", `O cliente pediu: ${currentOrder.name}`);
+        }
+
+        // Iniciar timer do pedido
+        function startOrderTimer() {
+            if (orderTimerInterval) clearInterval(orderTimerInterval);
+            
+            orderTimerInterval = setInterval(() => {
+                orderTimeLeft--;
+                updateOrderTimer();
+                
+                if (orderTimeLeft <= 0) {
+                    clearInterval(orderTimerInterval);
+                    showMessage("Tempo Esgotado", "O cliente ficou impaciente e foi embora.");
+                    createNewOrder();
+                }
+            }, 1000);
+        }
+
+        // Atualizar display do timer
+        function updateOrderTimer() {
+            orderTimer.textContent = `Tempo: ${orderTimeLeft}s`;
+            
+            // Mudar cor conforme o tempo diminui
+            if (orderTimeLeft < 30) {
+                orderTimer.style.color = 'var(--primary)';
+            } else if (orderTimeLeft < 60) {
+                orderTimer.style.color = 'var(--secondary)';
+            } else {
+                orderTimer.style.color = 'var(--success)';
+            }
+        }
+
+        // Gerar lista de receitas
+        function generateRecipeList() {
+            recipeList.innerHTML = '';
+            
+            recipes.forEach(recipe => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${recipe.name}
+                    <span class="recipe-points">+${recipe.points}</span>
+                `;
+                recipeList.appendChild(li);
+            });
+        }
+
+        // Atualizar estatísticas
+        function updateStats() {
+            scoreElement.textContent = score;
+            dishesServedElement.textContent = dishesServed;
+            levelElement.textContent = level;
+            moneyElement.textContent = money;
+            
+            // Atualizar barra de XP
+            const xpPercentage = (xp / xpToNextLevel) * 100;
+            xpBar.style.width = `${xpPercentage}%`;
+        }
+
+        // Mostrar mensagem
+        function showMessage(title, text) {
+            messageTitle.textContent = title;
+            messageText.textContent = text;
+            message.style.display = 'block';
+        }
+
+        // Obter emoji do ingrediente
+        function getIngredientEmoji(ingredient) {
+            const emojis = {
+                'tomato': '🍅',
+                'lettuce': '🥬',
+                'cheese': '🧀',
+                'meat': '🥩',
+                'bread': '🍞',
+                'onion': '🧅',
+                'garlic': '🧄',
+                'carrot': '🥕',
+                'potato': '🥔',
+                'fish': '🐟',
+                'pasta': '🍝',
+                'rice': '🍚',
+                'lemon': '🍋',
+                'mushroom': '🍄',
+                'basil': '🌿',
+                'butter': '🧈',
+                'milk': '🥛'
+            };
+            return emojis[ingredient] || '❓';
+        }
+
+        // Obter nome do ingrediente
+        function getIngredientName(ingredient) {
+            const names = {
+                'tomato': 'Tomate',
+                'lettuce': 'Alface',
+                'cheese': 'Queijo',
+                'meat': 'Carne',
+                'bread': 'Pão',
+                'onion': 'Cebola',
+                'garlic': 'Alho',
+                'carrot': 'Cenoura',
+                'potato': 'Batata',
+                'fish': 'Peixe',
+                'pasta': 'Massa',
+                'rice': 'Arroz',
+                'lemon': 'Limão',
+                'mushroom': 'Cogumelo',
+                'basil': 'Manjericão',
+                'butter': 'Manteiga',
+                'milk': 'Leite'
+            };
+            return names[ingredient] || 'Ingrediente';
+        }
+
+        // Iniciar o jogo
+        initGame();
+    </script>
+</body>
+</html>
