@@ -3,13 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef Master - Jogo de Culinária</title>
+    <title>Chef Master Pro - Jogo de Culinária Realista</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #e74c3c;
+            --secondary: #e67e22;
+            --accent: #f1c40f;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --success: #2ecc71;
+            --wood: #8b4513;
+            --metal: #bdc3c7;
         }
 
         body {
@@ -23,9 +34,9 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             width: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
@@ -33,11 +44,12 @@
         }
 
         header {
-            background: linear-gradient(to right, #e74c3c, #e67e22);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
             padding: 20px;
             text-align: center;
             border-bottom: 5px solid #c0392b;
+            position: relative;
         }
 
         h1 {
@@ -47,101 +59,205 @@
         }
 
         .game-area {
-            display: flex;
-            flex-wrap: wrap;
-            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
             gap: 20px;
+            padding: 20px;
+            min-height: 700px;
         }
 
         .kitchen {
-            flex: 1;
-            min-width: 300px;
             background-color: #f9f9f9;
             border-radius: 15px;
             padding: 15px;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
             border: 2px solid #ddd;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 15px;
         }
 
-        .counter {
-            height: 200px;
+        .workstation {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            height: 300px;
+        }
+
+        .station {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border: 2px solid var(--metal);
+        }
+
+        .station-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--dark);
+            background: var(--light);
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .stove {
             background: linear-gradient(to bottom, #8b4513, #a0522d);
             border-radius: 10px;
-            margin-bottom: 20px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .burners {
+            display: flex;
+            gap: 30px;
+        }
+
+        .burner {
+            width: 50px;
+            height: 50px;
+            background: #333;
+            border-radius: 50%;
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4);
-        }
-
-        .stove {
-            width: 80%;
-            height: 60px;
-            background: #333;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            position: relative;
-        }
-
-        .burner {
-            width: 40px;
-            height: 40px;
-            background: #555;
-            border-radius: 50%;
-            position: relative;
         }
 
         .burner::after {
             content: '';
             position: absolute;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             background: #222;
             border-radius: 50%;
-            top: 5px;
-            left: 5px;
         }
 
-        .pan {
+        .cooking-item {
             position: absolute;
-            width: 100px;
-            height: 20px;
-            background: #b87333;
-            border-radius: 50% 50% 0 0;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .ingredients {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .ingredient {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-size: 2rem;
+            top: -60px;
             cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .cooking-item:hover {
+            transform: scale(1.05);
+        }
+
+        .pan {
+            background: #b87333;
+            left: 50px;
+        }
+
+        .pot {
+            background: silver;
+            left: 150px;
+        }
+
+        .cutting-board {
+            background: var(--wood);
+            border-radius: 10px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .ingredient-on-board {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .ingredient-on-board:hover {
+            transform: scale(1.05);
+        }
+
+        .oven {
+            background: #7f8c8d;
+            border-radius: 10px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .oven-door {
+            width: 80%;
+            height: 70%;
+            background: #95a5a6;
+            border: 5px solid #7f8c8d;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .ingredients-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .ingredient {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
             transition: all 0.3s;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            font-weight: bold;
-            color: white;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            font-size: 1.8rem;
+            position: relative;
         }
 
         .ingredient:hover {
-            transform: scale(1.1);
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .ingredient-name {
+            position: absolute;
+            bottom: 5px;
+            font-size: 0.7rem;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 5px;
+            width: 90%;
+            text-align: center;
         }
 
         .tomato { background: linear-gradient(to bottom, #ff4d4d, #cc0000); }
@@ -150,10 +266,14 @@
         .meat { background: linear-gradient(to bottom, #cc6633, #993300); }
         .bread { background: linear-gradient(to bottom, #e6b87e, #b8945f); }
         .onion { background: linear-gradient(to bottom, #cc99ff, #9966cc); }
+        .garlic { background: linear-gradient(to bottom, #f5f5f5, #dcdcdc); color: #666; }
+        .carrot { background: linear-gradient(to bottom, #ff8c00, #cc7000); }
+        .potato { background: linear-gradient(to bottom, #deb887, #b8860b); }
+        .fish { background: linear-gradient(to bottom, #87ceeb, #4682b4); }
+        .pasta { background: linear-gradient(to bottom, #fff8dc, #f0e68c); color: #666; }
+        .rice { background: linear-gradient(to bottom, #fffaf0, #f5deb3); color: #666; }
 
         .controls {
-            flex: 1;
-            min-width: 300px;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -164,11 +284,13 @@
             border-radius: 15px;
             padding: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border: 2px dashed #e67e22;
+            border: 2px dashed var(--secondary);
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .recipe-card h2 {
-            color: #e67e22;
+            color: var(--secondary);
             margin-bottom: 10px;
             text-align: center;
         }
@@ -178,34 +300,45 @@
         }
 
         .recipe-list li {
-            padding: 8px;
-            margin-bottom: 5px;
+            padding: 10px;
+            margin-bottom: 8px;
             background: #fff;
-            border-radius: 5px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
             display: flex;
             justify-content: space-between;
-            border-left: 4px solid #e67e22;
+            align-items: center;
+        }
+
+        .recipe-points {
+            background: var(--accent);
+            color: var(--dark);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
 
         .actions {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
-            justify-content: center;
         }
 
         button {
-            padding: 12px 20px;
+            padding: 12px 15px;
             border: none;
-            border-radius: 50px;
-            background: linear-gradient(to right, #e74c3c, #e67e22);
+            border-radius: 10px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            flex: 1;
-            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
 
         button:hover {
@@ -217,9 +350,17 @@
             transform: translateY(1px);
         }
 
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .stats {
-            display: flex;
-            justify-content: space-around;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
             background: #fff9e6;
             padding: 15px;
             border-radius: 15px;
@@ -228,51 +369,118 @@
 
         .stat {
             text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .stat-value {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
-            color: #e67e22;
+            color: var(--secondary);
+        }
+
+        .progress-container {
+            grid-column: 1 / -1;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .plate-area {
+            background: #f0f0f0;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid #ddd;
         }
 
         .plate {
-            height: 150px;
-            background: #f0f0f0;
-            border-radius: 15px;
-            margin-top: 20px;
+            width: 200px;
+            height: 200px;
+            background: white;
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
             overflow: hidden;
-            border: 2px solid #ddd;
         }
 
-        .plate::before {
-            content: '';
-            position: absolute;
-            width: 80%;
-            height: 80%;
-            background: white;
-            border-radius: 50%;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .dish {
-            position: relative;
-            z-index: 1;
+        .dish-content {
             text-align: center;
             font-weight: bold;
-            color: #5a3921;
+            color: var(--dark);
+            z-index: 2;
+            padding: 10px;
         }
 
-        .ingredient-in-pan {
+        .ingredient-on-plate {
             position: absolute;
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            z-index: 1;
+        }
+
+        .customer-order {
+            background: #e8f4f8;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #3498db;
+        }
+
+        .customer-order h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .order-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .order-ingredient {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+        }
+
+        .order-timer {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
         }
 
         .message {
@@ -280,77 +488,177 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px 50px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             text-align: center;
             z-index: 100;
             display: none;
+            max-width: 500px;
+            width: 90%;
         }
 
         .message h2 {
-            color: #e67e22;
-            margin-bottom: 10px;
+            color: var(--secondary);
+            margin-bottom: 15px;
         }
 
-        @media (max-width: 768px) {
+        .message p {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .cooking-timer {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 1024px) {
             .game-area {
-                flex-direction: column;
+                grid-template-columns: 1fr;
             }
             
-            .kitchen, .controls {
-                width: 100%;
+            .workstation {
+                grid-template-columns: 1fr;
+                height: auto;
             }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>🍳 Chef Master 🍳</h1>
-        <p>Prepare pratos deliciosos e torne-se um mestre da culinária!</p>
+        <h1>👨‍🍳 Chef Master Pro 👩‍🍳</h1>
+        <p>Domine a arte da culinária com técnicas avançadas e ingredientes diversos!</p>
     </header>
 
     <div class="container">
         <div class="game-area">
             <div class="kitchen">
-                <div class="counter">
-                    <div class="stove">
-                        <div class="burner"></div>
-                        <div class="burner"></div>
-                        <div class="pan" id="pan"></div>
+                <div class="workstation">
+                    <div class="station">
+                        <div class="station-title">Fogão</div>
+                        <div class="stove">
+                            <div class="burners">
+                                <div class="burner">
+                                    <div class="cooking-item pan" id="pan" data-tool="pan">🍳</div>
+                                </div>
+                                <div class="burner">
+                                    <div class="cooking-item pot" id="pot" data-tool="pot">🍲</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="station">
+                        <div class="station-title">Tábua de Corte</div>
+                        <div class="cutting-board" id="cutting-board">
+                            <!-- Ingredientes aparecerão aqui quando colocados -->
+                        </div>
+                    </div>
+                    
+                    <div class="station">
+                        <div class="station-title">Forno</div>
+                        <div class="oven">
+                            <div class="oven-door" id="oven">
+                                FORNO
+                                <div class="cooking-item" id="baking-tray" data-tool="oven" style="display:none;">🍞</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="station">
+                        <div class="station-title">Preparação</div>
+                        <div class="prep-area" id="prep-area">
+                            <!-- Área para misturar ingredientes -->
+                            <div style="text-align: center; padding: 20px; color: #7f8c8d;">
+                                Arraste ingredientes aqui para misturar
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="ingredients">
-                    <div class="ingredient tomato" data-ingredient="tomato">🍅</div>
-                    <div class="ingredient lettuce" data-ingredient="lettuce">🥬</div>
-                    <div class="ingredient cheese" data-ingredient="cheese">🧀</div>
-                    <div class="ingredient meat" data-ingredient="meat">🥩</div>
-                    <div class="ingredient bread" data-ingredient="bread">🍞</div>
-                    <div class="ingredient onion" data-ingredient="onion">🧅</div>
+                <div class="ingredients-panel">
+                    <div class="ingredient tomato" data-ingredient="tomato">
+                        🍅
+                        <div class="ingredient-name">Tomate</div>
+                    </div>
+                    <div class="ingredient lettuce" data-ingredient="lettuce">
+                        🥬
+                        <div class="ingredient-name">Alface</div>
+                    </div>
+                    <div class="ingredient cheese" data-ingredient="cheese">
+                        🧀
+                        <div class="ingredient-name">Queijo</div>
+                    </div>
+                    <div class="ingredient meat" data-ingredient="meat">
+                        🥩
+                        <div class="ingredient-name">Carne</div>
+                    </div>
+                    <div class="ingredient bread" data-ingredient="bread">
+                        🍞
+                        <div class="ingredient-name">Pão</div>
+                    </div>
+                    <div class="ingredient onion" data-ingredient="onion">
+                        🧅
+                        <div class="ingredient-name">Cebola</div>
+                    </div>
+                    <div class="ingredient garlic" data-ingredient="garlic">
+                        🧄
+                        <div class="ingredient-name">Alho</div>
+                    </div>
+                    <div class="ingredient carrot" data-ingredient="carrot">
+                        🥕
+                        <div class="ingredient-name">Cenoura</div>
+                    </div>
+                    <div class="ingredient potato" data-ingredient="potato">
+                        🥔
+                        <div class="ingredient-name">Batata</div>
+                    </div>
+                    <div class="ingredient fish" data-ingredient="fish">
+                        🐟
+                        <div class="ingredient-name">Peixe</div>
+                    </div>
+                    <div class="ingredient pasta" data-ingredient="pasta">
+                        🍝
+                        <div class="ingredient-name">Massa</div>
+                    </div>
+                    <div class="ingredient rice" data-ingredient="rice">
+                        🍚
+                        <div class="ingredient-name">Arroz</div>
+                    </div>
                 </div>
                 
-                <div class="plate">
-                    <div class="dish" id="dish">Seu prato aparecerá aqui</div>
+                <div class="actions">
+                    <button id="chop-btn" disabled>🔪 Cortar</button>
+                    <button id="cook-btn" disabled>🍳 Cozinhar</button>
+                    <button id="bake-btn" disabled>🔥 Assar</button>
+                    <button id="mix-btn" disabled>🥣 Misturar</button>
+                    <button id="serve-btn" disabled>🍽️ Servir</button>
+                    <button id="clear-btn">🗑️ Limpar</button>
                 </div>
             </div>
             
             <div class="controls">
-                <div class="recipe-card">
-                    <h2>📋 Receitas</h2>
-                    <ul class="recipe-list">
-                        <li>Hambúrguer <span>🥩 + 🍞 + 🧀</span></li>
-                        <li>Salada <span>🥬 + 🍅 + 🧅</span></li>
-                        <li>Sanduíche <span>🍞 + 🧀 + 🥬</span></li>
-                        <li>Pizza <span>🍞 + 🧀 + 🍅</span></li>
-                    </ul>
+                <div class="customer-order">
+                    <h3>Pedido do Cliente</h3>
+                    <div class="order-content" id="order-content">
+                        <!-- Ingredientes do pedido aparecerão aqui -->
+                    </div>
+                    <div class="order-timer" id="order-timer">Tempo: 120s</div>
                 </div>
                 
-                <div class="actions">
-                    <button id="cook-btn">Cozinhar</button>
-                    <button id="serve-btn">Servir</button>
-                    <button id="clear-btn">Limpar</button>
+                <div class="recipe-card">
+                    <h2>📋 Livro de Receitas</h2>
+                    <ul class="recipe-list" id="recipe-list">
+                        <!-- Receitas serão adicionadas via JavaScript -->
+                    </ul>
                 </div>
                 
                 <div class="stats">
@@ -366,6 +674,24 @@
                         <div class="stat-value" id="level">1</div>
                         <div>Nível</div>
                     </div>
+                    <div class="stat">
+                        <div class="stat-value" id="money">100</div>
+                        <div>Dinheiro ($)</div>
+                    </div>
+                    <div class="progress-container">
+                        <div>Experiência</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="xp-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="plate-area">
+                    <h3>Prato Final</h3>
+                    <div class="plate" id="plate">
+                        <div class="dish-content" id="dish-content">Seu prato aparecerá aqui</div>
+                    </div>
+                    <button id="new-order-btn">🆕 Novo Pedido</button>
                 </div>
             </div>
         </div>
@@ -374,19 +700,42 @@
     <div class="message" id="message">
         <h2 id="message-title">Parabéns!</h2>
         <p id="message-text">Você preparou um prato delicioso!</p>
-        <button id="close-message">Continuar</button>
+        <div class="actions">
+            <button id="close-message">Continuar</button>
+        </div>
     </div>
 
     <script>
         // Elementos do DOM
         const pan = document.getElementById('pan');
-        const dish = document.getElementById('dish');
+        const pot = document.getElementById('pot');
+        const cuttingBoard = document.getElementById('cutting-board');
+        const oven = document.getElementById('oven');
+        const bakingTray = document.getElementById('baking-tray');
+        const prepArea = document.getElementById('prep-area');
+        const plate = document.getElementById('plate');
+        const dishContent = document.getElementById('dish-content');
+        const orderContent = document.getElementById('order-content');
+        const orderTimer = document.getElementById('order-timer');
+        const recipeList = document.getElementById('recipe-list');
+        
+        // Botões
+        const chopBtn = document.getElementById('chop-btn');
         const cookBtn = document.getElementById('cook-btn');
+        const bakeBtn = document.getElementById('bake-btn');
+        const mixBtn = document.getElementById('mix-btn');
         const serveBtn = document.getElementById('serve-btn');
         const clearBtn = document.getElementById('clear-btn');
+        const newOrderBtn = document.getElementById('new-order-btn');
+        
+        // Estatísticas
         const scoreElement = document.getElementById('score');
         const dishesServedElement = document.getElementById('dishes-served');
         const levelElement = document.getElementById('level');
+        const moneyElement = document.getElementById('money');
+        const xpBar = document.getElementById('xp-bar');
+        
+        // Mensagem
         const message = document.getElementById('message');
         const messageTitle = document.getElementById('message-title');
         const messageText = document.getElementById('message-text');
@@ -396,196 +745,311 @@
         let score = 0;
         let dishesServed = 0;
         let level = 1;
-        let currentIngredients = [];
-        let isCooking = false;
+        let money = 100;
+        let xp = 0;
+        let xpToNextLevel = 100;
+        
+        // Estado das estações de trabalho
+        let currentStation = null;
+        let currentIngredients = {
+            pan: [],
+            pot: [],
+            cuttingBoard: [],
+            oven: [],
+            prepArea: []
+        };
+        
+        let cookingTimers = {};
+        let currentOrder = null;
+        let orderTimeLeft = 0;
+        let orderTimerInterval = null;
 
-        // Receitas
+        // Receitas avançadas
         const recipes = [
-            { name: "Hambúrguer", ingredients: ["meat", "bread", "cheese"], points: 30 },
-            { name: "Salada", ingredients: ["lettuce", "tomato", "onion"], points: 20 },
-            { name: "Sanduíche", ingredients: ["bread", "cheese", "lettuce"], points: 25 },
-            { name: "Pizza", ingredients: ["bread", "cheese", "tomato"], points: 35 }
+            { 
+                name: "Hambúrguer Gourmet", 
+                ingredients: ["meat", "bread", "cheese", "lettuce", "tomato"], 
+                points: 50,
+                price: 25,
+                tools: ["cuttingBoard", "pan"]
+            },
+            { 
+                name: "Salada Caesar", 
+                ingredients: ["lettuce", "cheese", "bread", "garlic"], 
+                points: 40,
+                price: 20,
+                tools: ["cuttingBoard", "prepArea"]
+            },
+            { 
+                name: "Sopa de Legumes", 
+                ingredients: ["carrot", "potato", "onion", "garlic"], 
+                points: 35,
+                price: 18,
+                tools: ["cuttingBoard", "pot"]
+            },
+            { 
+                name: "Peixe Grelhado", 
+                ingredients: ["fish", "lemon", "garlic"], 
+                points: 45,
+                price: 30,
+                tools: ["cuttingBoard", "pan"]
+            },
+            { 
+                name: "Massa à Bolonhesa", 
+                ingredients: ["pasta", "meat", "tomato", "onion", "garlic"], 
+                points: 55,
+                price: 28,
+                tools: ["cuttingBoard", "pot", "pan"]
+            },
+            { 
+                name: "Risoto de Cogumelos", 
+                ingredients: ["rice", "mushroom", "onion", "garlic", "cheese"], 
+                points: 60,
+                price: 32,
+                tools: ["cuttingBoard", "pot"]
+            },
+            { 
+                name: "Pizza Margherita", 
+                ingredients: ["bread", "tomato", "cheese", "basil"], 
+                points: 48,
+                price: 22,
+                tools: ["prepArea", "oven"]
+            },
+            { 
+                name: "Purê de Batata", 
+                ingredients: ["potato", "butter", "milk"], 
+                points: 30,
+                price: 15,
+                tools: ["cuttingBoard", "pot", "prepArea"]
+            }
         ];
 
         // Inicialização do jogo
         function initGame() {
             updateStats();
+            generateRecipeList();
+            createNewOrder();
             
-            // Adicionar eventos aos ingredientes
+            // Adicionar eventos de arrastar e soltar
             document.querySelectorAll('.ingredient').forEach(ingredient => {
-                ingredient.addEventListener('click', addIngredient);
+                ingredient.addEventListener('dragstart', handleDragStart);
+            });
+            
+            // Adicionar eventos de soltar
+            document.querySelectorAll('.station, .cooking-item, #prep-area').forEach(area => {
+                area.addEventListener('dragover', handleDragOver);
+                area.addEventListener('drop', handleDrop);
             });
             
             // Adicionar eventos aos botões
+            chopBtn.addEventListener('click', chopIngredients);
             cookBtn.addEventListener('click', startCooking);
+            bakeBtn.addEventListener('click', startBaking);
+            mixBtn.addEventListener('click', mixIngredients);
             serveBtn.addEventListener('click', serveDish);
-            clearBtn.addEventListener('click', clearPan);
+            clearBtn.addEventListener('click', clearStation);
+            newOrderBtn.addEventListener('click', createNewOrder);
             closeMessage.addEventListener('click', () => {
                 message.style.display = 'none';
             });
+            
+            // Adicionar eventos de clique nas estações
+            document.querySelectorAll('.cooking-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    selectStation(item);
+                });
+            });
+            
+            // Selecionar a panela por padrão
+            selectStation(pan);
         }
 
-        // Adicionar ingrediente à panela
-        function addIngredient(e) {
-            if (isCooking) {
-                showMessage("Atenção", "Espere terminar de cozinhar antes de adicionar mais ingredientes!");
-                return;
+        // Manipulação de arrastar e soltar
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.getAttribute('data-ingredient'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const ingredientType = e.dataTransfer.getData('text/plain');
+            addIngredientToStation(ingredientType, e.target);
+        }
+
+        // Adicionar ingrediente a uma estação
+        function addIngredientToStation(ingredientType, stationElement) {
+            // Determinar em qual estação o ingrediente foi solto
+            let station = null;
+            let stationId = null;
+            
+            if (stationElement.classList.contains('pan') || stationElement.id === 'pan') {
+                station = pan;
+                stationId = 'pan';
+            } else if (stationElement.classList.contains('pot') || stationElement.id === 'pot') {
+                station = pot;
+                stationId = 'pot';
+            } else if (stationElement.classList.contains('cutting-board') || stationElement.id === 'cutting-board') {
+                station = cuttingBoard;
+                stationId = 'cuttingBoard';
+            } else if (stationElement.classList.contains('oven') || stationElement.id === 'oven') {
+                station = bakingTray;
+                stationId = 'oven';
+            } else if (stationElement.id === 'prep-area') {
+                station = prepArea;
+                stationId = 'prepArea';
             }
             
-            const ingredient = e.target.getAttribute('data-ingredient');
-            
-            if (currentIngredients.length < 3) {
-                currentIngredients.push(ingredient);
+            if (station && currentIngredients[stationId].length < 5) {
+                currentIngredients[stationId].push(ingredientType);
                 
-                // Adicionar visualmente à panela
+                // Adicionar visualmente à estação
                 const ingredientElement = document.createElement('div');
-                ingredientElement.className = `ingredient-in-pan ${ingredient}`;
-                ingredientElement.textContent = getIngredientEmoji(ingredient);
-                ingredientElement.style.left = `${20 + currentIngredients.length * 25}px`;
-                ingredientElement.style.top = '-10px';
-                pan.appendChild(ingredientElement);
+                ingredientElement.className = `ingredient-on-board ${ingredientType}`;
+                ingredientElement.textContent = getIngredientEmoji(ingredientType);
+                ingredientElement.setAttribute('data-ingredient', ingredientType);
                 
-                // Efeito visual
-                ingredientElement.style.transform = 'scale(0)';
-                setTimeout(() => {
-                    ingredientElement.style.transform = 'scale(1)';
-                    ingredientElement.style.transition = 'transform 0.3s';
-                }, 10);
+                // Posicionar aleatoriamente na estação
+                const stationRect = station.getBoundingClientRect();
+                const maxX = stationRect.width - 60;
+                const maxY = stationRect.height - 60;
+                
+                const randomX = Math.floor(Math.random() * maxX);
+                const randomY = Math.floor(Math.random() * maxY);
+                
+                ingredientElement.style.left = `${randomX}px`;
+                ingredientElement.style.top = `${randomY}px`;
+                
+                station.appendChild(ingredientElement);
+                
+                // Atualizar botões com base na estação selecionada
+                updateActionButtons();
             } else {
-                showMessage("Atenção", "A panela está cheia! Cozinhe ou limpe antes de adicionar mais ingredientes.");
+                showMessage("Atenção", "Esta estação está cheia ou não é válida!");
             }
         }
 
-        // Iniciar o processo de cozinhar
-        function startCooking() {
-            if (currentIngredients.length === 0) {
-                showMessage("Atenção", "Adicione ingredientes antes de cozinhar!");
-                return;
-            }
+        // Selecionar uma estação de trabalho
+        function selectStation(stationElement) {
+            // Remover seleção anterior
+            document.querySelectorAll('.cooking-item').forEach(item => {
+                item.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+            });
             
-            if (isCooking) {
-                showMessage("Atenção", "Já está cozinhando!");
-                return;
-            }
+            // Adicionar seleção à nova estação
+            stationElement.style.boxShadow = '0 0 0 3px var(--accent)';
             
-            isCooking = true;
+            // Atualizar estação atual
+            currentStation = stationElement.getAttribute('data-tool');
+            
+            // Atualizar botões de ação
+            updateActionButtons();
+        }
+
+        // Atualizar botões de ação com base na estação selecionada
+        function updateActionButtons() {
+            // Por padrão, desabilitar todos os botões
+            chopBtn.disabled = true;
             cookBtn.disabled = true;
+            bakeBtn.disabled = true;
+            mixBtn.disabled = true;
+            serveBtn.disabled = true;
             
-            // Efeito visual de cozimento
-            pan.style.animation = 'cook 2s ease-in-out';
+            if (!currentStation) return;
             
-            // Simular tempo de cozimento
-            setTimeout(() => {
-                isCooking = false;
-                cookBtn.disabled = false;
-                pan.style.animation = '';
+            // Habilitar botões com base na estação selecionada e nos ingredientes
+            const ingredients = currentIngredients[currentStation];
+            
+            if (ingredients.length > 0) {
+                switch(currentStation) {
+                    case 'cuttingBoard':
+                        chopBtn.disabled = false;
+                        break;
+                    case 'pan':
+                    case 'pot':
+                        cookBtn.disabled = false;
+                        break;
+                    case 'oven':
+                        bakeBtn.disabled = false;
+                        break;
+                    case 'prepArea':
+                        mixBtn.disabled = false;
+                        break;
+                }
                 
-                // Verificar se criou uma receita válida
-                checkRecipe();
+                // Sempre habilitar servir se houver ingredientes em qualquer estação
+                serveBtn.disabled = false;
+            }
+        }
+
+        // Cortar ingredientes
+        function chopIngredients() {
+            if (currentStation !== 'cuttingBoard' || currentIngredients.cuttingBoard.length === 0) return;
+            
+            showMessage("Preparação", "Cortando ingredientes...");
+            
+            // Simular tempo de corte
+            setTimeout(() => {
+                // Marcar ingredientes como cortados (adicionar um indicador visual)
+                const cuttingBoardIngredients = cuttingBoard.querySelectorAll('.ingredient-on-board');
+                cuttingBoardIngredients.forEach(ingredient => {
+                    ingredient.style.transform = 'scale(0.8)';
+                    ingredient.style.opacity = '0.8';
+                    ingredient.textContent = '🔪' + ingredient.textContent;
+                });
+                
+                showMessage("Sucesso", "Ingredientes cortados com sucesso!");
+                updateActionButtons();
             }, 2000);
         }
 
-        // Verificar se os ingredientes formam uma receita
-        function checkRecipe() {
-            const sortedIngredients = [...currentIngredients].sort();
+        // Cozinhar ingredientes
+        function startCooking() {
+            if ((currentStation !== 'pan' && currentStation !== 'pot') || currentIngredients[currentStation].length === 0) return;
             
-            for (const recipe of recipes) {
-                const sortedRecipe = [...recipe.ingredients].sort();
+            showMessage("Cozinhando", "Preparando os ingredientes...");
+            cookBtn.disabled = true;
+            
+            // Adicionar timer visual
+            const timer = document.createElement('div');
+            timer.className = 'cooking-timer';
+            timer.textContent = '30s';
+            document.querySelector(`#${currentStation}`).appendChild(timer);
+            
+            let timeLeft = 30;
+            cookingTimers[currentStation] = setInterval(() => {
+                timeLeft--;
+                timer.textContent = `${timeLeft}s`;
                 
-                if (JSON.stringify(sortedIngredients) === JSON.stringify(sortedRecipe)) {
-                    showMessage("Sucesso!", `Você preparou um ${recipe.name} delicioso! +${recipe.points} pontos`);
-                    score += recipe.points;
-                    dishesServed++;
+                if (timeLeft <= 0) {
+                    clearInterval(cookingTimers[currentStation]);
+                    timer.remove();
                     
-                    // Verificar se subiu de nível
-                    if (dishesServed % 3 === 0) {
-                        level++;
-                        showMessage("Parabéns!", `Você subiu para o nível ${level}!`);
-                    }
+                    // Marcar ingredientes como cozidos
+                    const stationElement = document.querySelector(`#${currentStation}`);
+                    const ingredients = stationElement.querySelectorAll('.ingredient-on-board');
+                    ingredients.forEach(ingredient => {
+                        ingredient.style.transform = 'scale(1.1)';
+                        ingredient.style.filter = 'brightness(1.2)';
+                    });
                     
-                    updateStats();
-                    return;
+                    showMessage("Sucesso", "Ingredientes cozidos perfeitamente!");
+                    cookBtn.disabled = false;
                 }
-            }
+            }, 1000);
+        }
+
+        // Assar ingredientes
+        function startBaking() {
+            if (currentStation !== 'oven' || currentIngredients.oven.length === 0) return;
             
-            showMessage("Ops...", "Essa combinação não formou um prato conhecido. Tente novamente!");
-        }
-
-        // Servir o prato
-        function serveDish() {
-            if (currentIngredients.length === 0) {
-                showMessage("Atenção", "Não há nada para servir!");
-                return;
-            }
+            showMessage("Assando", "Colocando no forno...");
+            bakeBtn.disabled = true;
             
-            // Mostrar o prato no prato
-            const sortedIngredients = [...currentIngredients].sort();
-            let dishName = "Mistura Estranha";
+            // Mostrar a bandeja no forno
+            bakingTray.style.display = 'flex';
             
-            for (const recipe of recipes) {
-                const sortedRecipe = [...recipe.ingredients].sort();
-                
-                if (JSON.stringify(sortedIngredients) === JSON.stringify(sortedRecipe)) {
-                    dishName = recipe.name;
-                    break;
-                }
-            }
-            
-            dish.textContent = dishName;
-            clearPan();
-        }
-
-        // Limpar a panela
-        function clearPan() {
-            currentIngredients = [];
-            while (pan.firstChild) {
-                pan.removeChild(pan.firstChild);
-            }
-            dish.textContent = "Seu prato aparecerá aqui";
-        }
-
-        // Atualizar estatísticas na tela
-        function updateStats() {
-            scoreElement.textContent = score;
-            dishesServedElement.textContent = dishesServed;
-            levelElement.textContent = level;
-        }
-
-        // Mostrar mensagem
-        function showMessage(title, text) {
-            messageTitle.textContent = title;
-            messageText.textContent = text;
-            message.style.display = 'block';
-        }
-
-        // Obter emoji do ingrediente
-        function getIngredientEmoji(ingredient) {
-            const emojis = {
-                'tomato': '🍅',
-                'lettuce': '🥬',
-                'cheese': '🧀',
-                'meat': '🥩',
-                'bread': '🍞',
-                'onion': '🧅'
-            };
-            return emojis[ingredient] || '❓';
-        }
-
-        // Adicionar animação de cozimento
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes cook {
-                0% { transform: translateX(-50%) scale(1); }
-                25% { transform: translateX(-50%) scale(1.05); }
-                50% { transform: translateX(-50%) scale(1.1); }
-                75% { transform: translateX(-50%) scale(1.05); }
-                100% { transform: translateX(-50%) scale(1); }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Iniciar o jogo
-        initGame();
-    </script>
-</body>
-</html>
+            // Adicionar timer visual
+            const timer = document
